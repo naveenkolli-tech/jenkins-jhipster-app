@@ -1,11 +1,19 @@
 pipeline {
     agent any
 
-   tools {
-    nodejs 'Node 24'
-    maven 'Maven 3'
-}
+    tools {
+        nodejs 'Node 24'
+        maven 'Maven 3'
+        jdk 'JDK 17'
+    }
+
+    environment {
+        NPM_CONFIG_AUDIT = 'false'
+        NPM_CONFIG_FUND  = 'false'
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -14,7 +22,16 @@ pipeline {
 
         stage('Install frontend deps') {
             steps {
-                sh 'npm install'
+                sh '''
+                    echo "Node version:"
+                    node --version
+
+                    echo "NPM version:"
+                    npm --version
+
+                    rm -rf node_modules
+                    npm install --legacy-peer-deps
+                '''
             }
         }
 
@@ -31,3 +48,4 @@ pipeline {
         }
     }
 }
+
