@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-    nodejs 'Node24'
-    maven 'Maven3'
+    nodejs 'Node 24'
+    maven 'Maven 3'
 }
     stages {
         stage('Checkout') {
