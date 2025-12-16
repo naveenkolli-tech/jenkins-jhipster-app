@@ -15,6 +15,12 @@ pipeline {
 >>>>>>> 1cfe3cf0 (Modify Jenkinsfile to install npm with legacy flags)
     }
 
+    environment {
+        // Prevent npm permission & audit noise
+        NPM_CONFIG_AUDIT = 'false'
+        NPM_CONFIG_FUND  = 'false'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -43,9 +49,17 @@ pipeline {
 =======
                 echo 'Installing frontend dependencies'
                 sh '''
+                    echo "Node version:"
                     node --version
+
+                    echo "NPM version:"
                     npm --version
-                    npm install --legacy-peer-deps --no-audit --no-fund
+
+                    echo "Cleaning old node_modules"
+                    rm -rf node_modules
+
+                    echo "Installing dependencies"
+                    npm install --legacy-peer-deps
                 '''
 >>>>>>> 3db812c3 (Enhance Jenkinsfile with logging and npm command)
             }
@@ -53,7 +67,7 @@ pipeline {
 
         stage('Build backend') {
             steps {
-                echo 'Building backend'
+                echo 'Building backend (skip tests)'
                 sh '''
                     mvn clean verify -DskipTests
                 '''
@@ -62,7 +76,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo 'Running tests'
+                echo 'Running backend tests'
                 sh '''
                     mvn test
                 '''
@@ -71,14 +85,14 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'Pipeline finished'
-        }
         success {
-            echo 'Pipeline succeeded'
+            echo '✅ Pipeline completed successfully'
         }
         failure {
-            echo 'Pipeline failed'
+            echo '❌ Pipeline failed'
+        }
+        always {
+            echo '🧹 Pipeline finished'
         }
     }
 }
