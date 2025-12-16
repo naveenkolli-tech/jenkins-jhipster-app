@@ -4,7 +4,7 @@ pipeline {
     tools {
     nodejs 'Node 24'
     maven 'Maven 3'
-    jdk 'JDK 17
+    jdk 'JDK 17'
 }
 
 
