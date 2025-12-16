@@ -22,12 +22,8 @@ pipeline {
         stage('Install frontend deps') {
             steps {
                 sh '''
-                    echo "Node version:"
                     node --version
-
-                    echo "NPM version:"
                     npm --version
-
                     rm -rf node_modules
                     npm install --legacy-peer-deps
                 '''
