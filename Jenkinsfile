@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     tools {
-    nodejs 'Node 24'
-    maven 'Maven 3'
-}
+        nodejs 'Node 24'
+        maven 'Maven 3'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -14,7 +15,7 @@ pipeline {
 
         stage('Install frontend deps') {
             steps {
-                sh 'npm install'
+                sh 'npm install --legacy-peer-deps'
             }
         }
 
