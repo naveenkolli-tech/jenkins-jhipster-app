@@ -2,19 +2,8 @@ pipeline {
     agent any
 
     tools {
-        // Remove Node.js from tools block since it's not installed in Jenkins
-        // Use the Maven frontend plugin to install Node.js
-        maven 'Maven 3'
+        // Only use JDK 17 - let Maven handle Node.js via frontend-maven-plugin
         jdk 'JDK 17'
-    }
-
-    environment {
-        NPM_CONFIG_AUDIT = 'false'
-        NPM_CONFIG_FUND  = 'false'
-        // Explicitly set JAVA_HOME to ensure correct JDK
-        JAVA_HOME = "${tool 'JDK 17'}"
-        // Force Maven to use the correct Java version
-        MAVEN_OPTS = "-Djava.version=17"
     }
 
     stages {
@@ -26,45 +15,40 @@ pipeline {
 
         stage('Verify Java Version') {
             steps {
+                script {
+                    // Get the JDK 17 path from Jenkins tools
+                    def javaHome = tool name: 'JDK 17', type: 'jdk'
+                    // Set JAVA_HOME explicitly
+                    env.JAVA_HOME = javaHome
+                    // Add to PATH
+                    env.PATH = "${javaHome}/bin:${env.PATH}"
+                }
                 sh '''
-                    echo "=== Java Version ==="
+                    echo "=== Java Version Information ==="
                     echo "JAVA_HOME: ${JAVA_HOME}"
-                    "${JAVA_HOME}/bin/java" -version
+                    java -version
+                    which java
                     echo ""
-                    echo "=== Maven Version ==="
+                    echo "=== Maven Information ==="
                     mvn --version
                 '''
             }
         }
 
-        stage('Install frontend deps') {
+        stage('Build Full Application') {
             steps {
                 sh '''
-                    echo "=== Node.js Version (from Maven frontend plugin will install correct version) ==="
-                    # Clean node_modules
-                    rm -rf node_modules package-lock.json
+                    echo "=== Building JHipster application ==="
+                    echo "Using Java from: ${JAVA_HOME}"
                     
-                    # Let Maven handle Node.js installation via frontend-maven-plugin
-                    # This ensures the correct Node.js version (24.11.1) is installed
-                    mvn clean compile -DskipTests -DskipNodeModules=false
-                '''
-            }
-        }
-
-        stage('Build backend') {
-            steps {
-                sh '''
-                    echo "=== Building backend with JDK 17 ==="
-                    # Use the JAVA_HOME explicitly
-                    "${JAVA_HOME}/bin/java" -version
-                    
-                    # Build with skipTests for faster compilation
+                    # Clean and build with Maven
+                    # Maven will handle Node.js installation via frontend-maven-plugin
                     mvn clean compile -DskipTests
                 '''
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 sh '''
                     echo "=== Running tests ==="
