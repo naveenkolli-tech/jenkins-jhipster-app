@@ -2,21 +2,21 @@ pipeline {
     agent any
 
     tools {
-    nodejs 'Node 24'
-    maven 'Maven 3'
-    jdk 'JDK 17'
-}
-
+        nodejs 'Node 24'
+        maven 'Maven 3'
+        jdk 'JDK 17'
+    }
 
     environment {
         NPM_CONFIG_AUDIT = 'false'
         NPM_CONFIG_FUND  = 'false'
-        JAVA_HOME = "${tool 'JDK17'}"
-        PATH = "${JAVA_HOME}/bin:${env.PATH}"
+        JAVA_HOME = "${tool 'JDK 17'}"
+        MAVEN_HOME = "${tool 'Maven 3'}"
+        NODEJS_HOME = "${tool 'Node 24'}"
+        PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${NODEJS_HOME}/bin:${env.PATH}"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -30,7 +30,7 @@ pipeline {
                     java -version
 
                     echo "Maven version:"
-                    mvn -version
+                    mvn --version
 
                     echo "Node version:"
                     node --version
@@ -50,18 +50,10 @@ pipeline {
             }
         }
 
-        stage('Build backend') {
+        stage('Build & Test') {
             steps {
                 sh '''
-                    mvn clean verify -DskipTests
-                '''
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh '''
-                    mvn test
+                    mvn clean verify
                 '''
             }
         }
