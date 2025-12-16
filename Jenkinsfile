@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -15,20 +16,43 @@ pipeline {
 
         stage('Install frontend deps') {
             steps {
-                sh 'npm install --legacy-peer-deps'
+                echo 'Installing frontend dependencies'
+                sh '''
+                    node --version
+                    npm --version
+                    npm install --legacy-peer-deps --no-audit --no-fund
+                '''
             }
         }
 
         stage('Build backend') {
             steps {
-                sh 'mvn clean verify -DskipTests'
+                echo 'Building backend'
+                sh '''
+                    mvn clean verify -DskipTests
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                echo 'Running tests'
+                sh '''
+                    mvn test
+                '''
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished'
+        }
+        success {
+            echo 'Pipeline succeeded'
+        }
+        failure {
+            echo 'Pipeline failed'
         }
     }
 }
