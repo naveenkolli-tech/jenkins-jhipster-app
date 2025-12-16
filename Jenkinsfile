@@ -2,10 +2,11 @@ pipeline {
     agent any
 
     tools {
-        jdk     'JDK17'
-        nodejs  'Node24'
-        maven   'Maven3'
-    }
+    nodejs 'Node 24'
+    maven 'Maven 3'
+    jdk 'JDK 17'
+}
+
 
     environment {
         NPM_CONFIG_AUDIT = 'false'
