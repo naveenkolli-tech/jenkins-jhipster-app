@@ -4,6 +4,8 @@ pipeline {
     tools {
         nodejs 'Node 24'
         maven 'Maven 3'
+        jdk 'JDK 17'
+
     }
 
     environment {
@@ -22,12 +24,17 @@ pipeline {
         stage('Install frontend deps') {
             steps {
                 sh '''
+
+                    node --version
+                    npm --version
+
                     echo "Node version:"
                     node --version
 
                     echo "NPM version:"
                     npm --version
 
+ 
                     rm -rf node_modules
                     npm install --legacy-peer-deps
                 '''
