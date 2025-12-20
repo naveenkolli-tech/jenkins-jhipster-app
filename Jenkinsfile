@@ -4,7 +4,7 @@ pipeline {
     tools {
         // Use the SAME tools as deploy pipeline
         nodejs 'Node 24'
-        maven 'Maven 3'
+        maven 'Maven 2'
         jdk 'JDK 21'  // Change from JDK 17 to JDK 21
     }
 
