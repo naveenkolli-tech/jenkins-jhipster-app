@@ -5,7 +5,7 @@ pipeline {
         // Use the SAME tools as deploy pipeline
         nodejs 'Node 24'
         maven 'Maven 3'
-        jdk 'JDK 12'
+        jdk 'JDK 17'
     }
 
     environment {
