@@ -38,7 +38,7 @@ pipeline {
             }
         }
 
-        stage('Update pom.xml for JDK 21') {
+        stage('Update pom.xml for JDK 1') {
             steps {
                 sh '''
                     # Update pom.xml to use Java 21
