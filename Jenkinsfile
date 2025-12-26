@@ -32,19 +32,17 @@ pipeline {
         stage('Verify Environment (Force Node 24)') {
             steps {
                 script {
-                    def NODE_HOME = tool name: 'Node 24', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+                    def NODE_HOME = tool name: 'Node 24',
+                        type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
                     withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
                         sh '''
                             echo "=== Environment Information ==="
-
                             echo "JAVA_HOME:"
                             echo "$JAVA_HOME"
                             java -version
-
                             echo ""
                             echo "Maven version:"
                             mvn --version
-
                             echo ""
                             echo "Node version:"
                             node --version
@@ -57,7 +55,8 @@ pipeline {
         stage('Install Frontend Dependencies') {
             steps {
                 script {
-                    def NODE_HOME = tool name: 'Node 24', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+                    def NODE_HOME = tool name: 'Node 24',
+                        type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
                     withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
                         sh '''
                             rm -rf node_modules package-lock.json
@@ -77,7 +76,8 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 script {
-                    def NODE_HOME = tool name: 'Node 24', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+                    def NODE_HOME = tool name: 'Node 24',
+                        type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
                     withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
                         sh '''
                             if [ -f "package.json" ] && grep -q "build" package.json; then
@@ -99,12 +99,14 @@ pipeline {
     }
 
     post {
+        success {
+            archiveArtifacts artifacts: 'target/*.jar, target/*.war',
+                             fingerprint: true,
+                             allowEmptyArchive: true
+        }
         always {
             echo "Build status: ${currentBuild.currentResult}"
-            cleanWs()
-        }
-        success {
-            archiveArtifacts artifacts: 'target/*.jar, target/*.war', fingerprint: true
+            cleanWs()   // 🔥 keeps disk clean
         }
     }
 }
