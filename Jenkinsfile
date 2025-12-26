@@ -12,7 +12,6 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'Node 24'     // Jenkins Global Tool Configuration
         maven 'Maven 3'
         jdk 'JDK 21'
     }
@@ -30,54 +29,42 @@ pipeline {
             }
         }
 
-        stage('Verify Environment') {
+        stage('Verify Environment (Force Node 24)') {
             steps {
-                sh '''
-                    echo "=== Environment Information ==="
+                script {
+                    def NODE_HOME = tool name: 'Node 24', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+                    withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
+                        sh '''
+                            echo "=== Environment Information ==="
 
-                    echo "JAVA_HOME:"
-                    echo "$JAVA_HOME"
-                    java -version
+                            echo "JAVA_HOME:"
+                            echo "$JAVA_HOME"
+                            java -version
 
-                    echo ""
-                    echo "Maven version:"
-                    mvn --version
+                            echo ""
+                            echo "Maven version:"
+                            mvn --version
 
-                    echo ""
-                    echo "Node version:"
-                    node --version
-
-                    node_major=$(node -v | cut -d. -f1 | tr -d 'v')
-
-                    if [ "$node_major" -lt 24 ]; then
-                      echo "⚠️ WARNING: Node 24 is recommended"
-                      echo "⚠️ Current Node version: $(node -v)"
-                    else
-                      echo "✅ Node version is compliant"
-                    fi
-                '''
-            }
-        }
-
-        stage('Update pom.xml for JDK 21') {
-            steps {
-                sh '''
-                    sed -i "s/<java.version>.*<\\/java.version>/<java.version>21<\\/java.version>/" pom.xml || true
-                    sed -i "s/<release>.*<\\/release>/<release>21<\\/release>/" pom.xml || true
-                    sed -i "s/<maven.compiler.release>.*<\\/maven.compiler.release>/<maven.compiler.release>21<\\/maven.compiler.release>/" pom.xml || true
-
-                    echo "Updated Java version:"
-                    grep "<java.version>" pom.xml || true
-                '''
+                            echo ""
+                            echo "Node version:"
+                            node --version
+                        '''
+                    }
+                }
             }
         }
 
         stage('Install Frontend Dependencies') {
             steps {
-                sh '''
-                    rm -rf node_modules package-lock.json
-                    npm install --legacy-peer-deps
-                '''
+                script {
+                    def NODE_HOME = tool name: 'Node 24', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+                    withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
+                        sh '''
+                            rm -rf node_modules package-lock.json
+                            npm install --legacy-peer-deps
+                        '''
+                    }
+                }
             }
         }
 
@@ -89,13 +76,18 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                sh '''
-                    if [ -f "package.json" ] && grep -q "build" package.json; then
-                        npm run build || true
-                    else
-                        echo "No frontend build required"
-                    fi
-                '''
+                script {
+                    def NODE_HOME = tool name: 'Node 24', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+                    withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
+                        sh '''
+                            if [ -f "package.json" ] && grep -q "build" package.json; then
+                                npm run build
+                            else
+                                echo "No frontend build required"
+                            fi
+                        '''
+                    }
+                }
             }
         }
 
@@ -109,9 +101,8 @@ pipeline {
     post {
         always {
             echo "Build status: ${currentBuild.currentResult}"
-            cleanWs()   // 🔥 Prevents workspace disk growth permanently
+            cleanWs()
         }
-
         success {
             archiveArtifacts artifacts: 'target/*.jar, target/*.war', fingerprint: true
         }
