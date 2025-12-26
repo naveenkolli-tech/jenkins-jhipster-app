@@ -1,8 +1,9 @@
-// 🔒 KEEP ONLY LAST 2 BUILDS (latest + 1 backup)
+// 🔒 KEEP ALL BUILD HISTORY, KEEP ARTIFACTS ONLY FOR LAST 2 BUILDS
 properties([
   buildDiscarder(
     logRotator(
-      numToKeepStr: '2'
+      numToKeepStr: '-1',          // keep ALL build history
+      artifactNumToKeepStr: '2'    // keep artifacts for only last 2 builds
     )
   )
 ])
@@ -91,6 +92,7 @@ pipeline {
     post {
         always {
             echo "Build status: ${currentBuild.currentResult}"
+            cleanWs()   // 🔥 THIS fixes your disk issue permanently
         }
 
         success {
