@@ -1,3 +1,4 @@
+// 🔒 Keep ALL build history, keep artifacts ONLY for last 2 builds
 properties([
   buildDiscarder(
     logRotator(
@@ -22,6 +23,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -30,13 +32,20 @@ pipeline {
 
         stage('Verify Environment') {
             steps {
-                sh '''
-                    echo "=== Environment Information ==="
-                    echo "JAVA_HOME: $JAVA_HOME"
-                    java -version
-                    mvn --version
-                    node --version
-                '''
+                script {
+                    def NODE_HOME = tool name: 'Node 24',
+                        type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+
+                    withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
+                        sh '''
+                            echo "=== Environment Information ==="
+                            echo "JAVA_HOME: $JAVA_HOME"
+                            java -version
+                            mvn --version
+                            node --version
+                        '''
+                    }
+                }
             }
         }
 
@@ -53,10 +62,17 @@ pipeline {
 
         stage('Install Frontend Dependencies') {
             steps {
-                sh '''
-                    rm -rf node_modules package-lock.json
-                    npm install --legacy-peer-deps
-                '''
+                script {
+                    def NODE_HOME = tool name: 'Node 24',
+                        type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+
+                    withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
+                        sh '''
+                            rm -rf node_modules package-lock.json
+                            npm install --legacy-peer-deps
+                        '''
+                    }
+                }
             }
         }
 
@@ -68,11 +84,20 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                sh '''
-                    if [ -f "package.json" ] && grep -q "build" package.json; then
-                        npm run build || true
-                    fi
-                '''
+                script {
+                    def NODE_HOME = tool name: 'Node 24',
+                        type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+
+                    withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
+                        sh '''
+                            if [ -f "package.json" ] && grep -q "build" package.json; then
+                                npm run build
+                            else
+                                echo "No frontend build required"
+                            fi
+                        '''
+                    }
+                }
             }
         }
 
@@ -84,12 +109,14 @@ pipeline {
     }
 
     post {
+        success {
+            archiveArtifacts artifacts: 'target/*.jar, target/*.war',
+                             fingerprint: true,
+                             allowEmptyArchive: true
+        }
         always {
             echo "Build status: ${currentBuild.currentResult}"
             cleanWs()
-        }
-        success {
-            archiveArtifacts artifacts: 'target/*.jar, target/*.war', fingerprint: true
         }
     }
 }
