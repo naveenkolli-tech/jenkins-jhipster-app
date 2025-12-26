@@ -1,3 +1,13 @@
+
+properties([
+  buildDiscarder(
+    logRotator(
+      numToKeepStr: '-1',                 // keep ALL build history
+      artifactNumToKeepStr: '2'           // keep artifacts for only last 2 builds
+    )
+  )
+])
+
 pipeline {
     agent any
 
