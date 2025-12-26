@@ -12,8 +12,7 @@ pipeline {
     agent any
 
     tools {
-        // Will use system Node if Jenkins Node 24 tool is not configured
-        nodejs 'Node 24'
+        nodejs 'Node 24'     // Jenkins Global Tool Configuration
         maven 'Maven 3'
         jdk 'JDK 21'
     }
@@ -51,11 +50,10 @@ pipeline {
                     node_major=$(node -v | cut -d. -f1 | tr -d 'v')
 
                     if [ "$node_major" -lt 24 ]; then
-                      echo "⚠️ WARNING: Node 24 is recommended."
+                      echo "⚠️ WARNING: Node 24 is recommended"
                       echo "⚠️ Current Node version: $(node -v)"
-                      echo "⚠️ Build will continue for now."
                     else
-                      echo "✅ Node version is compliant."
+                      echo "✅ Node version is compliant"
                     fi
                 '''
             }
@@ -111,7 +109,7 @@ pipeline {
     post {
         always {
             echo "Build status: ${currentBuild.currentResult}"
-            cleanWs()   // 🔥 Prevents workspace disk growth
+            cleanWs()   // 🔥 Prevents workspace disk growth permanently
         }
 
         success {
