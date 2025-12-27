@@ -20,6 +20,7 @@ pipeline {
     environment {
         NPM_CONFIG_AUDIT = 'false'
         NPM_CONFIG_FUND  = 'false'
+        CI = 'true'
     }
 
     stages {
@@ -67,10 +68,12 @@ pipeline {
                         type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
 
                     withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
-                        sh '''
-                            rm -rf node_modules package-lock.json
-                            npm install --legacy-peer-deps
-                        '''
+                        timeout(time: 20, unit: 'MINUTES') {
+                            sh '''
+                                rm -rf node_modules package-lock.json
+                                npm install --legacy-peer-deps --no-progress --loglevel=info
+                            '''
+                        }
                     }
                 }
             }
@@ -89,13 +92,15 @@ pipeline {
                         type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
 
                     withEnv(["PATH+NODE=${NODE_HOME}/bin"]) {
-                        sh '''
-                            if [ -f "package.json" ] && grep -q "build" package.json; then
-                                npm run build
-                            else
-                                echo "No frontend build required"
-                            fi
-                        '''
+                        timeout(time: 15, unit: 'MINUTES') {
+                            sh '''
+                                if [ -f "package.json" ] && grep -q "build" package.json; then
+                                    npm run build
+                                else
+                                    echo "No frontend build required"
+                                fi
+                            '''
+                        }
                     }
                 }
             }
